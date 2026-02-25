@@ -1,0 +1,26 @@
+{
+  "name": "TinyCNN",
+  "inputs": [
+    { "name": "image", "dtype": "float32", "shape": [1, 3, 32, 32] }
+  ],
+  "outputs": ["probs"],
+  "nodes": [
+    { "name": "conv1", "op": "Conv2D", "inputs": ["image", "conv1_w"], "attributes": { "filters": 16, "kernel": 3, "stride": 1, "padding": "same" } },
+    { "name": "conv1_w", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [16, 3, 3, 3] } },
+    { "name": "bn1", "op": "BatchNorm", "inputs": ["conv1"] },
+    { "name": "relu1", "op": "ReLU", "inputs": ["bn1"] },
+    { "name": "pool1", "op": "MaxPool2D", "inputs": ["relu1"], "attributes": { "kernel": 2, "stride": 2 } },
+    { "name": "conv2", "op": "Conv2D", "inputs": ["pool1", "conv2_w"], "attributes": { "filters": 32, "kernel": 3, "stride": 1, "padding": "same" } },
+    { "name": "conv2_w", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [32, 16, 3, 3] } },
+    { "name": "bn2", "op": "BatchNorm", "inputs": ["conv2"] },
+    { "name": "relu2", "op": "ReLU", "inputs": ["bn2"] },
+    { "name": "pool2", "op": "MaxPool2D", "inputs": ["relu2"], "attributes": { "kernel": 2, "stride": 2 } },
+    { "name": "gap", "op": "GlobalAvgPool", "inputs": ["pool2"] },
+    { "name": "flat", "op": "Flatten", "inputs": ["gap"] },
+    { "name": "fc", "op": "MatMul", "inputs": ["flat", "fc_w"] },
+    { "name": "fc_w", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [32, 10] } },
+    { "name": "fc_b", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [10] } },
+    { "name": "fc_bias", "op": "Add", "inputs": ["fc", "fc_b"] },
+    { "name": "probs", "op": "Softmax", "inputs": ["fc_bias"] }
+  ]
+}

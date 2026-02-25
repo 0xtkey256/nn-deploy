@@ -1,0 +1,20 @@
+{
+  "name": "MNIST-MLP",
+  "inputs": [
+    { "name": "image", "dtype": "float32", "shape": [1, 1, 28, 28] }
+  ],
+  "outputs": ["probs"],
+  "nodes": [
+    { "name": "flat", "op": "Flatten", "inputs": ["image"] },
+    { "name": "fc1", "op": "MatMul", "inputs": ["flat", "w1"], "attributes": {} },
+    { "name": "w1", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [784, 128] } },
+    { "name": "b1", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [128] } },
+    { "name": "fc1_bias", "op": "Add", "inputs": ["fc1", "b1"] },
+    { "name": "relu1", "op": "ReLU", "inputs": ["fc1_bias"] },
+    { "name": "fc2", "op": "MatMul", "inputs": ["relu1", "w2"], "attributes": {} },
+    { "name": "w2", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [128, 10] } },
+    { "name": "b2", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [10] } },
+    { "name": "fc2_bias", "op": "Add", "inputs": ["fc2", "b2"] },
+    { "name": "probs", "op": "Softmax", "inputs": ["fc2_bias"] }
+  ]
+}

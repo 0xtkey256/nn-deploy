@@ -1,0 +1,31 @@
+{
+  "name": "MicroTransformer",
+  "inputs": [
+    { "name": "tokens", "dtype": "float32", "shape": [1, 32, 64] }
+  ],
+  "outputs": ["output"],
+  "nodes": [
+    { "name": "ln1", "op": "LayerNorm", "inputs": ["tokens"] },
+    { "name": "q_proj", "op": "MatMul", "inputs": ["ln1", "wq"] },
+    { "name": "wq", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [64, 64] } },
+    { "name": "k_proj", "op": "MatMul", "inputs": ["ln1", "wk"] },
+    { "name": "wk", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [64, 64] } },
+    { "name": "v_proj", "op": "MatMul", "inputs": ["ln1", "wv"] },
+    { "name": "wv", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [64, 64] } },
+    { "name": "attn", "op": "ScaledDotProductAttention", "inputs": ["q_proj", "k_proj", "v_proj"] },
+    { "name": "attn_proj", "op": "MatMul", "inputs": ["attn", "wo"] },
+    { "name": "wo", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [64, 64] } },
+    { "name": "residual1", "op": "Add", "inputs": ["tokens", "attn_proj"] },
+    { "name": "ln2", "op": "LayerNorm", "inputs": ["residual1"] },
+    { "name": "ff1", "op": "MatMul", "inputs": ["ln2", "w_ff1"] },
+    { "name": "w_ff1", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [64, 256] } },
+    { "name": "b_ff1", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [256] } },
+    { "name": "ff1_bias", "op": "Add", "inputs": ["ff1", "b_ff1"] },
+    { "name": "gelu", "op": "GELU", "inputs": ["ff1_bias"] },
+    { "name": "ff2", "op": "MatMul", "inputs": ["gelu", "w_ff2"] },
+    { "name": "w_ff2", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [256, 64] } },
+    { "name": "b_ff2", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [64] } },
+    { "name": "ff2_bias", "op": "Add", "inputs": ["ff2", "b_ff2"] },
+    { "name": "output", "op": "Add", "inputs": ["residual1", "ff2_bias"] }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "ResNetBlock",
+  "inputs": [
+    { "name": "x", "dtype": "float32", "shape": [1, 64, 16, 16] }
+  ],
+  "outputs": ["out"],
+  "nodes": [
+    { "name": "conv1", "op": "Conv2D", "inputs": ["x", "w1"], "attributes": { "filters": 64, "kernel": 3, "stride": 1, "padding": "same" } },
+    { "name": "w1", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [64, 64, 3, 3] } },
+    { "name": "bn1", "op": "BatchNorm", "inputs": ["conv1"] },
+    { "name": "relu1", "op": "ReLU", "inputs": ["bn1"] },
+    { "name": "conv2", "op": "Conv2D", "inputs": ["relu1", "w2"], "attributes": { "filters": 64, "kernel": 3, "stride": 1, "padding": "same" } },
+    { "name": "w2", "op": "Constant", "inputs": [], "tensorType": { "dtype": "float32", "shape": [64, 64, 3, 3] } },
+    { "name": "bn2", "op": "BatchNorm", "inputs": ["conv2"] },
+    { "name": "residual", "op": "Add", "inputs": ["x", "bn2"] },
+    { "name": "out", "op": "ReLU", "inputs": ["residual"] }
+  ]
+}
