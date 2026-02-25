@@ -4,8 +4,10 @@ Neural Network Compiler Stack & Deployment Platform
 
 [![Live Demo](https://img.shields.io/badge/demo-nn--deploy.vercel.app-blue)](https://nn-deploy.vercel.app)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-green)](https://0xtkey256.github.io/nn-deploy/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](./LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](./CONTRIBUTING.md)
 
-A full-stack neural network compiler that runs entirely in the browser. Define models with a simple DSL, compile through an optimization pipeline, generate executable code, and run inference — all client-side.
+A full-stack, open-source neural network compiler that runs entirely in the browser. Define models with a simple DSL, compile through an optimization pipeline, generate executable code, and run inference — all client-side.
 
 ## Pipeline
 
@@ -66,10 +68,29 @@ nn-deploy/
 
 ## Tech Stack
 
-TypeScript · Next.js 15 · React 19 · Turborepo · D3.js · ELK.js · WebGPU · Zustand · Tailwind CSS v4
+| Technology | Role | Link |
+|---|---|---|
+| [TypeScript](https://www.typescriptlang.org/) | Language | Strict mode, ES2022 target |
+| [Next.js](https://nextjs.org/) 15 | Web framework | App Router, React Server Components |
+| [React](https://react.dev/) 19 | UI library | Client components for interactive views |
+| [Turborepo](https://turbo.build/repo) | Monorepo build | Parallel builds, task caching |
+| [D3.js](https://d3js.org/) | Visualization | Graph rendering, zoom/pan interaction |
+| [ELK.js](https://www.eclipse.org/elk/) | Graph layout | Layered layout algorithm for IR graphs |
+| [WebGPU](https://www.w3.org/TR/webgpu/) | GPU compute | WGSL compute shaders for inference |
+| [Zustand](https://zustand.docs.pmnd.rs/) | State management | Compiler store, UI state |
+| [Tailwind CSS](https://tailwindcss.com/) v4 | Styling | Utility-first CSS |
+| [Vercel](https://vercel.com/) | Deployment | Production hosting |
+
+## Contributing
+
+Contributions are welcome! Please read the [Contributing Guide](./CONTRIBUTING.md) before submitting a PR.
+
+## License
+
+This project is licensed under the [MIT License](./LICENSE).
 
 ## Links
 
 - **Live App**: [nn-deploy.vercel.app](https://nn-deploy.vercel.app)
 - **Playground**: [nn-deploy.vercel.app/playground](https://nn-deploy.vercel.app/playground)
-- **Docs**: [0xtkey256.github.io/nn-deploy](https://0xtkey256.github.io/nn-deploy/)
+- **Documentation**: [0xtkey256.github.io/nn-deploy](https://0xtkey256.github.io/nn-deploy/)
