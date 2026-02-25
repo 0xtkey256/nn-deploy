@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>nn-deploy - Documentation</title>
+  <meta name="description" content="Documentation for nn-deploy: Neural Network Compiler Stack & Deployment Platform">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/prism-theme.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="doc-header">
+  <button class="hamburger" id="hamburger" aria-label="Menu">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+      <rect x="2" y="4" width="16" height="2" rx="1"/>
+      <rect x="2" y="9" width="16" height="2" rx="1"/>
+      <rect x="2" y="14" width="16" height="2" rx="1"/>
+    </svg>
+  </button>
+  <a href="#" class="logo">
+    <svg width="20" height="20" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#0d1117"/><rect x="4" y="4" width="24" height="24" rx="4" fill="none" stroke="#58a6ff" stroke-width="2"/><circle cx="10" cy="12" r="2.5" fill="#bc8cff"/><circle cx="22" cy="12" r="2.5" fill="#f0883e"/><circle cx="16" cy="22" r="2.5" fill="#3fb950"/></svg>
+    nn-<span>deploy</span>
+  </a>
+  <nav>
+    <a href="https://nn-deploy.vercel.app" target="_blank">Live App</a>
+    <a href="https://nn-deploy.vercel.app/playground" target="_blank">Playground</a>
+    <a href="https://github.com/0xtkey256/nn-deploy" target="_blank">GitHub</a>
+  </nav>
+</header>
+
+<!-- Sidebar Backdrop (mobile) -->
+<div class="sidebar-backdrop"></div>
+
+<!-- Layout -->
+<div class="doc-layout">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <div class="section-label">Getting Started</div>
+    <a href="#introduction">Introduction</a>
+    <a href="#getting-started">Getting Started</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="section-label">Compiler</div>
+    <a href="#dsl-guide">DSL Guide</a>
+    <a href="#dsl-grammar" class="sub">Grammar</a>
+    <a href="#dsl-ops" class="sub">Operations</a>
+    <a href="#dsl-examples" class="sub">DSL Examples</a>
+    <a href="#passes">Optimization Passes</a>
+    <a href="#codegen">Code Generation</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="section-label">Runtime</div>
+    <a href="#runtime">Runtime API</a>
+    <a href="#tensor-api" class="sub">Tensor</a>
+    <a href="#session-api" class="sub">InferenceSession</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="section-label">Reference</div>
+    <a href="#examples">Examples</a>
+    <a href="#architecture">Architecture</a>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<main class="doc-content">
+<div class="doc-content-inner">
+
+<!-- ==================== SECTION 1: Introduction ==================== -->
+<div class="section" id="introduction">
+  <div class="hero-intro">
+    <h1><span class="gradient-text">nn-deploy</span></h1>
+    <p class="hero-sub">Neural Network Compiler Stack &amp; Deployment Platform</p>
+    <div class="hero-links">
+      <a href="https://nn-deploy.vercel.app/playground" target="_blank" class="btn-primary">Open Playground</a>
+      <a href="https://nn-deploy.vercel.app/inference" target="_blank" class="btn-outline">Try Inference</a>
+      <a href="https://github.com/0xtkey256/nn-deploy" target="_blank" class="btn-outline">GitHub</a>
+    </div>
+  </div>
+
+  <p>nn-deploy is a full-stack neural network compiler and deployment platform that runs entirely in the browser. Define models using a simple DSL, compile them through an optimization pipeline, generate executable code, and run inference &mdash; all client-side.</p>
+
+  <h3>Compilation Pipeline</h3>
+  <div class="diagram-container" id="diagram-pipeline"></div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon" style="color: var(--purple);">&#9670;</div>
+      <h4>Multi-Level IR</h4>
+      <p>High-level graph IR with immutable transformations and full pass history for visualization.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="color: var(--orange);">&#9889;</div>
+      <h4>7 Optimization Passes</h4>
+      <p>Shape inference, constant folding, DCE, operator fusion, quantization, layout optimization, memory planning.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="color: var(--pink);">&#9881;</div>
+      <h4>3 Code Gen Backends</h4>
+      <p>Target JavaScript (reference), WebGPU WGSL compute shaders, or WASM dispatch from the same IR.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="color: var(--success);">&#9654;</div>
+      <h4>In-Browser Inference</h4>
+      <p>Run compiled models directly in the browser with auto-detection of the best available engine.</p>
+    </div>
+  </div>
+
+  <h3>Quick Example</h3>
+  <pre><code class="language-typescript">import { parseDSL, compileModel } from '@nn-deploy/compiler';
+import { Tensor, InferenceSession } from '@nn-deploy/runtime';
+
+// 1. Parse model DSL
+const graph = parseDSL(`
+  model MLP {
+    input x: Tensor&lt;float32&gt;[1, 784]
+    h = MatMul(x, w)
+    out = Softmax(h)
+    output out
+  }
+`);
+
+// 2. Compile with optimizations
+const { model } = compileModel(graph, { target: 'js' });
+
+// 3. Run inference
+const session = await InferenceSession.create(model);
+const result = await session.run({ x: Tensor.rand([1, 784]) });
+console.log(result.outputs);
+session.dispose();</code></pre>
+</div>
+
+<!-- ==================== SECTION 2: Getting Started ==================== -->
+<div class="section" id="getting-started">
+  <h2>Getting Started</h2>
+  <p>nn-deploy is a Turborepo monorepo with three packages and a Next.js web application.</p>
+
+  <h3>Project Structure</h3>
+  <div class="file-tree">
+    <span class="dir">nn-deploy/</span><br>
+    &nbsp;&nbsp;<span class="dir">apps/</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">web/</span> <span class="comment"># Next.js frontend (Playground, Inference, Landing)</span><br>
+    &nbsp;&nbsp;<span class="dir">packages/</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">compiler/</span> <span class="comment"># @nn-deploy/compiler - IR, passes, codegen</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">runtime/</span> <span class="comment"># @nn-deploy/runtime - Tensor, engines, session</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">ui/</span> <span class="comment"># @nn-deploy/ui - Shared components</span><br>
+    &nbsp;&nbsp;<span class="dir">examples/</span> <span class="comment"># JSON model definitions</span><br>
+    &nbsp;&nbsp;<span class="file">turbo.json</span> <span class="comment"># Build pipeline config</span><br>
+    &nbsp;&nbsp;<span class="file">vercel.json</span> <span class="comment"># Deployment config</span>
+  </div>
+
+  <h3>Installation</h3>
+  <pre><code class="language-bash">git clone https://github.com/0xtkey256/nn-deploy.git
+cd nn-deploy
+npm install</code></pre>
+
+  <h3>Development</h3>
+  <pre><code class="language-bash"># Start dev server (compiles packages + starts Next.js)
+npm run dev
+
+# Build all packages
+npm run build</code></pre>
+
+  <div class="callout callout-tip">
+    <p><strong>Tip:</strong> Open <a href="https://nn-deploy.vercel.app/playground" target="_blank">the playground</a> to try the compiler interactively without cloning.</p>
+  </div>
+</div>
+
+<!-- ==================== SECTION 3: DSL Guide ==================== -->
+<div class="section" id="dsl-guide">
+  <h2>DSL Guide</h2>
+  <p>nn-deploy uses a custom domain-specific language for defining neural network models. The DSL compiles to an immutable graph IR that passes through the optimization pipeline.</p>
+
+  <h3 id="dsl-grammar">Grammar</h3>
+  <p>A model definition follows this structure:</p>
+  <pre><code class="language-dsl">model ModelName {
+  // Declare inputs with tensor type
+  input x: Tensor&lt;float32&gt;[1, 784]
+
+  // Operations: target = Op(args, kwargs)
+  h1 = MatMul(x, weights)
+  h1b = Add(h1, bias)
+  activated = ReLU(h1b)
+
+  // Declare output
+  output activated
+}</code></pre>
+
+  <h4>Syntax Details</h4>
+  <ul>
+    <li><strong>Comments:</strong> <code>// line comments</code></li>
+    <li><strong>Tensor types:</strong> <code>Tensor&lt;dtype&gt;[dim1, dim2, ...]</code></li>
+    <li><strong>Arrows:</strong> <code>-&gt;</code> or <code>&#8594;</code> (Unicode) for data flow annotations</li>
+    <li><strong>Keyword arguments:</strong> <code>key=value</code> (e.g., <code>filters=16</code>, <code>kernel=3</code>)</li>
+    <li><strong>Array values:</strong> <code>[1, 2, 3]</code> in kwargs</li>
+    <li><strong>Auto constants:</strong> Undefined references (e.g., <code>w1</code>, <code>bias</code>) are automatically created as Constant nodes with random weights</li>
+  </ul>
+
+  <h4>Data Types</h4>
+  <table>
+    <thead><tr><th>Type</th><th>Bytes</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>float32</code></td><td>4</td><td>32-bit floating point (default)</td></tr>
+      <tr><td><code>float16</code></td><td>2</td><td>16-bit floating point</td></tr>
+      <tr><td><code>int32</code></td><td>4</td><td>32-bit integer</td></tr>
+      <tr><td><code>int8</code></td><td>1</td><td>8-bit integer (quantized)</td></tr>
+      <tr><td><code>uint8</code></td><td>1</td><td>Unsigned 8-bit integer</td></tr>
+      <tr><td><code>bool</code></td><td>1</td><td>Boolean</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="dsl-ops">Operations Reference</h3>
+  <p>The compiler supports 38 operations across 10 categories:</p>
+
+  <h4>I/O</h4>
+  <table>
+    <thead><tr><th>Op</th><th>Inputs</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="op-color" style="background:#6366f1"></span><code>Input</code></td><td>0</td><td>Model input tensor</td></tr>
+      <tr><td><span class="op-color" style="background:#6366f1"></span><code>Output</code></td><td>1</td><td>Model output tensor</td></tr>
+      <tr><td><span class="op-color" style="background:#6366f1"></span><code>Constant</code></td><td>0</td><td>Constant tensor value (auto-created for weights)</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Linear Algebra</h4>
+  <table>
+    <thead><tr><th>Op</th><th>Inputs</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="op-color" style="background:#3b82f6"></span><code>MatMul</code></td><td>2</td><td>Matrix multiplication</td></tr>
+      <tr><td><span class="op-color" style="background:#3b82f6"></span><code>Add</code></td><td>2</td><td>Element-wise addition</td></tr>
+      <tr><td><span class="op-color" style="background:#3b82f6"></span><code>Sub</code></td><td>2</td><td>Element-wise subtraction</td></tr>
+      <tr><td><span class="op-color" style="background:#3b82f6"></span><code>Mul</code></td><td>2</td><td>Element-wise multiplication</td></tr>
+      <tr><td><span class="op-color" style="background:#3b82f6"></span><code>Div</code></td><td>2</td><td>Element-wise division</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Convolution</h4>
+  <table>
+    <thead><tr><th>Op</th><th>Inputs</th><th>Description</th><th>Key Args</th></tr></thead>
+    <tbody>
+      <tr><td><span class="op-color" style="background:#8b5cf6"></span><code>Conv2D</code></td><td>2-3</td><td>2D convolution</td><td><code>filters, kernel, stride, padding</code></td></tr>
+      <tr><td><span class="op-color" style="background:#8b5cf6"></span><code>DepthwiseConv2D</code></td><td>2-3</td><td>Depthwise separable convolution</td><td><code>kernel, stride, padding</code></td></tr>
+      <tr><td><span class="op-color" style="background:#8b5cf6"></span><code>ConvTranspose2D</code></td><td>2-3</td><td>Transposed 2D convolution</td><td><code>filters, kernel, stride</code></td></tr>
+    </tbody>
+  </table>
+
+  <h4>Normalization</h4>
+  <table>
+    <thead><tr><th>Op</th><th>Inputs</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="op-color" style="background:#ec4899"></span><code>BatchNorm</code></td><td>1-5</td><td>Batch normalization</td></tr>
+      <tr><td><span class="op-color" style="background:#ec4899"></span><code>LayerNorm</code></td><td>1-3</td><td>Layer normalization</td></tr>
+      <tr><td><span class="op-color" style="background:#ec4899"></span><code>GroupNorm</code></td><td>1-3</td><td>Group normalization</td></tr>
+      <tr><td><span class="op-color" style="background:#ec4899"></span><code>InstanceNorm</code></td><td>1-3</td><td>Instance normalization</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Activation</h4>
+  <table>
+    <thead><tr><th>Op</th><th>Description</th><th>Formula</th></tr></thead>
+    <tbody>
+      <tr><td><span class="op-color" style="background:#10b981"></span><code>ReLU</code></td><td>Rectified linear unit</td><td><code>max(0, x)</code></td></tr>
+      <tr><td><span class="op-color" style="background:#10b981"></span><code>GELU</code></td><td>Gaussian error linear unit</td><td><code>x * &Phi;(x)</code></td></tr>
+      <tr><td><span class="op-color" style="background:#10b981"></span><code>Sigmoid</code></td><td>Sigmoid activation</td><td><code>1 / (1 + e^(-x))</code></td></tr>
+      <tr><td><span class="op-color" style="background:#10b981"></span><code>Tanh</code></td><td>Hyperbolic tangent</td><td><code>tanh(x)</code></td></tr>
+      <tr><td><span class="op-color" style="background:#10b981"></span><code>Softmax</code></td><td>Softmax normalization</td><td><code>e^(xi) / &Sigma;e^(xj)</code></td></tr>
+      <tr><td><span class="op-color" style="background:#10b981"></span><code>SiLU</code></td><td>Sigmoid linear unit (Swish)</td><td><code>x * sigmoid(x)</code></td></tr>
+    </tbody>
+  </table>
+
+  <h4>Pooling</h4>
+  <table>
+    <thead><tr><th>Op</th><th>Description</th><th>Key Args</th></tr></thead>
+    <tbody>
+      <tr><td><span class="op-color" style="background:#f59e0b"></span><code>MaxPool2D</code></td><td>Max pooling 2D</td><td><code>kernel, stride</code></td></tr>
+      <tr><td><span class="op-color" style="background:#f59e0b"></span><code>AvgPool2D</code></td><td>Average pooling 2D</td><td><code>kernel, stride</code></td></tr>
+      <tr><td><span class="op-color" style="background:#f59e0b"></span><code>GlobalAvgPool</code></td><td>Global average pooling</td><td>&mdash;</td></tr>
+      <tr><td><span class="op-color" style="background:#f59e0b"></span><code>AdaptiveAvgPool</code></td><td>Adaptive average pooling</td><td><code>output_size</code></td></tr>
+    </tbody>
+  </table>
+
+  <h4>Shape</h4>
+  <table>
+    <thead><tr><th>Op</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="op-color" style="background:#6b7280"></span><code>Reshape</code></td><td>Reshape tensor dimensions</td></tr>
+      <tr><td><span class="op-color" style="background:#6b7280"></span><code>Transpose</code></td><td>Transpose tensor axes</td></tr>
+      <tr><td><span class="op-color" style="background:#6b7280"></span><code>Flatten</code></td><td>Flatten to 2D</td></tr>
+      <tr><td><span class="op-color" style="background:#6b7280"></span><code>Concat</code></td><td>Concatenate tensors along axis</td></tr>
+      <tr><td><span class="op-color" style="background:#6b7280"></span><code>Split</code></td><td>Split tensor along axis</td></tr>
+      <tr><td><span class="op-color" style="background:#6b7280"></span><code>Squeeze</code></td><td>Remove size-1 dimensions</td></tr>
+      <tr><td><span class="op-color" style="background:#6b7280"></span><code>Unsqueeze</code></td><td>Insert size-1 dimension</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Reduction &amp; Attention</h4>
+  <table>
+    <thead><tr><th>Op</th><th>Category</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="op-color" style="background:#ef4444"></span><code>ReduceSum</code></td><td>Reduce</td><td>Sum reduction along axes</td></tr>
+      <tr><td><span class="op-color" style="background:#ef4444"></span><code>ReduceMean</code></td><td>Reduce</td><td>Mean reduction along axes</td></tr>
+      <tr><td><span class="op-color" style="background:#ef4444"></span><code>ReduceMax</code></td><td>Reduce</td><td>Max reduction along axes</td></tr>
+      <tr><td><span class="op-color" style="background:#06b6d4"></span><code>Embedding</code></td><td>Embedding</td><td>Embedding lookup</td></tr>
+      <tr><td><span class="op-color" style="background:#06b6d4"></span><code>ScaledDotProductAttention</code></td><td>Embedding</td><td>Scaled dot-product attention (Q, K, V)</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Fused Operations</h4>
+  <p>Created automatically by the operator fusion pass:</p>
+  <table>
+    <thead><tr><th>Op</th><th>Fuses</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="op-color" style="background:#f97316"></span><code>FusedConvBNReLU</code></td><td>Conv2D + BatchNorm + ReLU</td><td>Single fused convolution kernel</td></tr>
+      <tr><td><span class="op-color" style="background:#f97316"></span><code>FusedConvBN</code></td><td>Conv2D + BatchNorm</td><td>Fused conv with batch norm</td></tr>
+      <tr><td><span class="op-color" style="background:#f97316"></span><code>FusedMatMulAdd</code></td><td>MatMul + Add</td><td>Fused linear layer</td></tr>
+      <tr><td><span class="op-color" style="background:#f97316"></span><code>FusedLinearReLU</code></td><td>MatMul + Add + ReLU</td><td>Fused linear + activation</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="dsl-examples">DSL Examples</h3>
+
+  <div>
+    <div class="example-tabs">
+      <button class="example-tab active" data-target="ex-mnist">MNIST MLP</button>
+      <button class="example-tab" data-target="ex-cnn">Tiny CNN</button>
+      <button class="example-tab" data-target="ex-resnet">ResNet Block</button>
+      <button class="example-tab" data-target="ex-transformer">Transformer</button>
+      <button class="example-tab" data-target="ex-depthwise">DepthSep Conv</button>
+    </div>
+
+    <div id="ex-mnist" class="example-panel active">
+      <p>A simple multi-layer perceptron for MNIST digit classification (784 &#8594; 128 &#8594; 10):</p>
+      <pre><code class="language-dsl">model MNIST_MLP {
+  input x: Tensor&lt;float32&gt;[1, 784]
+
+  // Hidden layer
+  h1 = MatMul(x, w1)
+  h1b = Add(h1, b1)
+  a1 = ReLU(h1b)
+
+  // Output layer
+  h2 = MatMul(a1, w2)
+  h2b = Add(h2, b2)
+  probs = Softmax(h2b)
+
+  output probs
+}</code></pre>
+      <div class="callout callout-info">
+        <p><strong>Fusion:</strong> The operator fusion pass will fuse <code>MatMul + Add</code> into <code>FusedMatMulAdd</code>, and the first <code>MatMul + Add + ReLU</code> chain into <code>FusedLinearReLU</code>.</p>
+      </div>
+    </div>
+
+    <div id="ex-cnn" class="example-panel">
+      <p>A small CNN with two convolution blocks followed by a classifier:</p>
+      <pre><code class="language-dsl">model TinyCNN {
+  input x: Tensor&lt;float32&gt;[1, 3, 32, 32]
+
+  // Conv block 1
+  c1 = Conv2D(x, w1, filters=16, kernel=3, stride=1, padding=same)
+  bn1 = BatchNorm(c1)
+  r1 = ReLU(bn1)
+  p1 = MaxPool2D(r1, kernel=2, stride=2)
+
+  // Conv block 2
+  c2 = Conv2D(p1, w2, filters=32, kernel=3, stride=1, padding=same)
+  bn2 = BatchNorm(c2)
+  r2 = ReLU(bn2)
+  p2 = MaxPool2D(r2, kernel=2, stride=2)
+
+  // Classifier
+  gap = GlobalAvgPool(p2)
+  flat = Flatten(gap)
+  logits = MatMul(flat, wfc)
+  out = Softmax(logits)
+
+  output out
+}</code></pre>
+      <div class="callout callout-info">
+        <p><strong>Fusion:</strong> Each <code>Conv2D &#8594; BatchNorm &#8594; ReLU</code> chain fuses into a single <code>FusedConvBNReLU</code> node.</p>
+      </div>
+    </div>
+
+    <div id="ex-resnet" class="example-panel">
+      <p>A residual block with skip connection:</p>
+      <pre><code class="language-dsl">model ResNetBlock {
+  input x: Tensor&lt;float32&gt;[1, 64, 16, 16]
+
+  // Main path
+  c1 = Conv2D(x, w1, filters=64, kernel=3, stride=1, padding=same)
+  bn1 = BatchNorm(c1)
+  r1 = ReLU(bn1)
+
+  c2 = Conv2D(r1, w2, filters=64, kernel=3, stride=1, padding=same)
+  bn2 = BatchNorm(c2)
+
+  // Residual connection
+  res = Add(x, bn2)
+  out = ReLU(res)
+
+  output out
+}</code></pre>
+    </div>
+
+    <div id="ex-transformer" class="example-panel">
+      <p>A single transformer layer with self-attention and feed-forward network:</p>
+      <pre><code class="language-dsl">model TransformerBlock {
+  input tokens: Tensor&lt;float32&gt;[1, 32, 64]
+
+  // Self-attention
+  ln1 = LayerNorm(tokens)
+  q = MatMul(ln1, wq)
+  k = MatMul(ln1, wk)
+  v = MatMul(ln1, wv)
+  attn = ScaledDotProductAttention(q, k, v)
+  proj = MatMul(attn, wo)
+  res1 = Add(tokens, proj)
+
+  // Feed-forward
+  ln2 = LayerNorm(res1)
+  ff1 = MatMul(ln2, w1)
+  ff1b = Add(ff1, b1)
+  act = GELU(ff1b)
+  ff2 = MatMul(act, w2)
+  ff2b = Add(ff2, b2)
+  out = Add(res1, ff2b)
+
+  output out
+}</code></pre>
+    </div>
+
+    <div id="ex-depthwise" class="example-panel">
+      <p>MobileNet-style depthwise separable convolution:</p>
+      <pre><code class="language-dsl">model DepthwiseSeparable {
+  input x: Tensor&lt;float32&gt;[1, 32, 16, 16]
+
+  // Depthwise conv
+  dw = DepthwiseConv2D(x, dw_w, kernel=3, stride=1, padding=same)
+  dw_bn = BatchNorm(dw)
+  dw_relu = ReLU(dw_bn)
+
+  // Pointwise conv (1x1)
+  pw = Conv2D(dw_relu, pw_w, filters=64, kernel=1, stride=1)
+  pw_bn = BatchNorm(pw)
+  out = ReLU(pw_bn)
+
+  output out
+}</code></pre>
+    </div>
+  </div>
+
+  <h3>JSON Format</h3>
+  <p>Alternatively, models can be defined in an ONNX-like JSON format:</p>
+  <pre><code class="language-json">{
+  "name": "SimpleMLP",
+  "nodes": [
+    { "name": "x", "op": "Input", "inputs": [],
+      "outputs": [{ "name": "x", "tensorType": { "dtype": "float32", "shape": [1, 784] } }] },
+    { "name": "h1", "op": "MatMul", "inputs": ["x", "w1"],
+      "outputs": [{ "name": "h1" }] },
+    { "name": "out", "op": "Softmax", "inputs": ["h1"],
+      "outputs": [{ "name": "out" }] }
+  ]
+}</code></pre>
+</div>
+
+<!-- ==================== SECTION 4: Optimization Passes ==================== -->
+<div class="section" id="passes">
+  <h2>Optimization Passes</h2>
+  <p>The compiler includes 7 optimization passes that transform the graph to improve performance. Passes run sequentially, and the full history is preserved for visualization in the playground.</p>
+
+  <div class="pass-card">
+    <div class="pass-header">
+      <span class="pass-num">1</span>
+      <span class="pass-name">Shape Inference</span>
+    </div>
+    <p class="pass-desc">Propagates tensor shapes through the graph in topological order. Each operation computes its output shape from its input shapes (e.g., MatMul computes [M,K] &times; [K,N] = [M,N]).</p>
+    <ul>
+      <li>Annotates every edge with a <code>tensorType</code> (dtype + shape)</li>
+      <li>Handles Conv2D output: <code>floor((H - K + 2P) / S) + 1</code></li>
+      <li>Enables all downstream passes that need shape information</li>
+    </ul>
+  </div>
+
+  <div class="pass-card">
+    <div class="pass-header">
+      <span class="pass-num">2</span>
+      <span class="pass-name">Constant Folding</span>
+    </div>
+    <p class="pass-desc">Evaluates subgraphs where all inputs are constants at compile time. Iterates until a fixed point (no more folding possible).</p>
+    <ul>
+      <li>Replaces computed constant chains with single Constant nodes</li>
+      <li>Reduces runtime computation by moving work to compile time</li>
+    </ul>
+  </div>
+
+  <div class="pass-card">
+    <div class="pass-header">
+      <span class="pass-num">3</span>
+      <span class="pass-name">Dead Code Elimination</span>
+    </div>
+    <p class="pass-desc">Removes nodes that don't contribute to any model output. Performs backward BFS from Output nodes to find reachable nodes.</p>
+    <ul>
+      <li>Eliminates unreachable nodes and their edges</li>
+      <li>Cleans up artifacts from other passes</li>
+    </ul>
+  </div>
+
+  <div class="pass-card">
+    <div class="pass-header">
+      <span class="pass-num">4</span>
+      <span class="pass-name">Operator Fusion</span>
+    </div>
+    <p class="pass-desc">Detects and fuses common operation patterns into optimized single-kernel nodes. Requires each intermediate node to have exactly one consumer.</p>
+    <div class="diagram-container" id="diagram-fusion"></div>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top: -8px;">Four fusion patterns:</p>
+    <ul>
+      <li><code>Conv2D + BatchNorm + ReLU</code> &rarr; <code>FusedConvBNReLU</code></li>
+      <li><code>Conv2D + BatchNorm</code> &rarr; <code>FusedConvBN</code></li>
+      <li><code>MatMul + Add + ReLU</code> &rarr; <code>FusedLinearReLU</code></li>
+      <li><code>MatMul + Add</code> &rarr; <code>FusedMatMulAdd</code></li>
+    </ul>
+  </div>
+
+  <div class="pass-card">
+    <div class="pass-header">
+      <span class="pass-num">5</span>
+      <span class="pass-name">Quantization</span>
+    </div>
+    <p class="pass-desc">Converts eligible operations from float32 to int8 symmetric quantization for faster inference and smaller model size.</p>
+    <ul>
+      <li>Targets: MatMul, Conv2D, DepthwiseConv2D, Add, and all fused variants</li>
+      <li>Annotates nodes with <code>_quantized</code>, <code>_quantScheme</code>, <code>_quantBits</code></li>
+      <li>Updates edge tensor types along quantized paths</li>
+    </ul>
+  </div>
+
+  <div class="pass-card">
+    <div class="pass-header">
+      <span class="pass-num">6</span>
+      <span class="pass-name">Layout Optimization</span>
+    </div>
+    <p class="pass-desc">Converts tensor layouts from NCHW to NHWC for GPU-friendly memory access patterns.</p>
+    <ul>
+      <li>Targets spatial operations: Conv2D, DepthwiseConv2D, pooling, BatchNorm</li>
+      <li>Transposes shapes: <code>[N,C,H,W]</code> &rarr; <code>[N,H,W,C]</code></li>
+    </ul>
+  </div>
+
+  <div class="pass-card">
+    <div class="pass-header">
+      <span class="pass-num">7</span>
+      <span class="pass-name">Memory Planning</span>
+    </div>
+    <p class="pass-desc">Performs liveness analysis and allocates memory offsets using a greedy first-fit decreasing algorithm to minimize peak memory usage.</p>
+    <div class="diagram-container" id="diagram-memory"></div>
+    <ul>
+      <li>Computes tensor lifetimes (first use &#8594; last use)</li>
+      <li>Allocates non-overlapping memory blocks</li>
+      <li>Annotates nodes with <code>_memOffset</code>, <code>_memSize</code>, <code>_peakMemory</code></li>
+    </ul>
+  </div>
+
+  <h3>Pass Pipeline API</h3>
+  <pre><code class="language-typescript">import { runPipeline, ALL_PASSES } from '@nn-deploy/compiler';
+
+// Run all 7 passes
+const result = runPipeline(graph, ALL_PASSES);
+// result.graph: optimized graph
+// result.history: array of { passName, graph } for each step
+
+// Or run individual passes
+import { shapeInferencePass, operatorFusionPass } from '@nn-deploy/compiler';
+const result = runPipeline(graph, [shapeInferencePass, operatorFusionPass]);</code></pre>
+</div>
+
+<!-- ==================== SECTION 5: Code Generation ==================== -->
+<div class="section" id="codegen">
+  <h2>Code Generation</h2>
+  <p>After optimization, the compiler generates executable code for one of three backends:</p>
+
+  <div class="backend-grid">
+    <div class="backend-card">
+      <div class="backend-icon" style="color: var(--warning);">JS</div>
+      <h4>JavaScript</h4>
+      <p>Reference implementation. Always works in any browser.</p>
+    </div>
+    <div class="backend-card">
+      <div class="backend-icon" style="color: var(--accent);">GPU</div>
+      <h4>WebGPU (WGSL)</h4>
+      <p>Compute shaders for GPU acceleration.</p>
+    </div>
+    <div class="backend-card">
+      <div class="backend-icon" style="color: var(--purple);">WA</div>
+      <h4>WASM</h4>
+      <p>Structured op dispatch for near-native speed.</p>
+    </div>
+  </div>
+
+  <h3>JavaScript Backend</h3>
+  <p>Generates a self-contained JS module with a <code>Tensor</code> class and per-operation kernel functions:</p>
+  <pre><code class="language-typescript">// Example generated kernel for MatMul
+function kernel_h1(inputs, output) {
+  const A = inputs[0], B = inputs[1];
+  const M = A.shape[A.shape.length - 2];
+  const K = A.shape[A.shape.length - 1];
+  const N = B.shape[B.shape.length - 1];
+  for (let m = 0; m &lt; M; m++) {
+    for (let n = 0; n &lt; N; n++) {
+      let sum = 0;
+      for (let k = 0; k &lt; K; k++) {
+        sum += A.data[m * K + k] * B.data[k * N + n];
+      }
+      output.data[m * N + n] = sum;
+    }
+  }
+}</code></pre>
+
+  <h3>WebGPU WGSL Backend</h3>
+  <p>Generates compute shaders for GPU execution:</p>
+  <pre><code class="language-wgsl">@group(0) @binding(0) var&lt;storage, read&gt; A: array&lt;f32&gt;;
+@group(0) @binding(1) var&lt;storage, read&gt; B: array&lt;f32&gt;;
+@group(0) @binding(2) var&lt;storage, read_write&gt; C: array&lt;f32&gt;;
+
+struct Params { M: u32, N: u32, K: u32 }
+@group(0) @binding(3) var&lt;uniform&gt; params: Params;
+
+@compute @workgroup_size(16, 16)
+fn main(@builtin(global_invocation_id) gid: vec3&lt;u32&gt;) {
+  let row = gid.x;
+  let col = gid.y;
+  if (row &gt;= params.M || col &gt;= params.N) { return; }
+  var sum: f32 = 0.0;
+  for (var k: u32 = 0u; k &lt; params.K; k = k + 1u) {
+    sum = sum + A[row * params.K + k] * B[k * params.N + col];
+  }
+  C[row * params.N + col] = sum;
+}</code></pre>
+
+  <h3>Compile API</h3>
+  <pre><code class="language-typescript">import { compileModel } from '@nn-deploy/compiler';
+
+const result = compileModel(graph, {
+  target: 'js',              // 'js' | 'webgpu' | 'wasm'
+  passes: ALL_PASSES,        // which passes to run (default: all)
+  enableQuantization: false,  // enable INT8 quantization
+});
+
+// result.model: CompiledModel (kernels + memory plan)
+// result.code: GeneratedCode (source string + kernel list)
+// result.history: pass-by-pass graph snapshots
+// result.metrics: { before, after } GraphMetrics</code></pre>
+</div>
+
+<!-- ==================== SECTION 6: Runtime API ==================== -->
+<div class="section" id="runtime">
+  <h2>Runtime API</h2>
+  <p>The <code>@nn-deploy/runtime</code> package provides the execution engine for running compiled models in the browser.</p>
+
+  <h3 id="tensor-api">Tensor</h3>
+  <p>The <code>Tensor</code> class manages typed array data with shape and stride information:</p>
+  <pre><code class="language-typescript">import { Tensor } from '@nn-deploy/runtime';
+
+// Create tensors
+const zeros = Tensor.zeros([2, 3]);          // 2x3 zero tensor
+const ones  = Tensor.ones([4, 4]);           // 4x4 ones tensor
+const rand  = Tensor.rand([1, 784]);         // random uniform [0, 1)
+const randn = Tensor.randn([1, 128]);        // random normal (0, 1)
+
+// From data
+const t = new Tensor(
+  new Float32Array([1, 2, 3, 4, 5, 6]),
+  [2, 3]  // shape
+);
+
+// Properties
+t.shape;      // [2, 3]
+t.numel;      // 6
+t.ndim;       // 2
+t.byteSize;   // 24
+t.strides;    // [3, 1]
+
+// Methods
+t.reshape([3, 2]);  // new tensor with different shape
+t.clone();          // deep copy
+t.toArray();        // Float32Array -> number[]
+t.toString();       // "Tensor&lt;float32&gt;[2,3]"</code></pre>
+
+  <h3 id="session-api">InferenceSession</h3>
+  <p>The main API for running compiled models. Automatically selects the best available engine.</p>
+  <pre><code class="language-typescript">import { InferenceSession, Tensor } from '@nn-deploy/runtime';
+import { parseDSL, compileModel } from '@nn-deploy/compiler';
+
+// Compile
+const graph = parseDSL(dslSource);
+const { model } = compileModel(graph, { target: 'js' });
+
+// Create session (auto-selects best engine)
+const session = await InferenceSession.create(model);
+
+// Run inference
+const result = await session.run({
+  x: Tensor.rand([1, 784])
+});
+
+// Result
+result.outputs;    // Record&lt;string, Tensor&gt;
+result.latencyMs;  // execution time in ms
+result.backend;    // 'js' | 'webgpu'
+
+// Metadata
+session.getMetadata();
+// { name, target, nodeCount, edgeCount }
+
+// Cleanup
+session.dispose();</code></pre>
+
+  <h3>Engine Selection</h3>
+  <p>The runtime supports two execution engines:</p>
+  <table>
+    <thead><tr><th>Engine</th><th>Requirement</th><th>Speed</th><th>Compatibility</th></tr></thead>
+    <tbody>
+      <tr><td><strong>JSEngine</strong></td><td>None</td><td>Baseline</td><td>All browsers</td></tr>
+      <tr><td><strong>WebGPUEngine</strong></td><td>WebGPU API</td><td>GPU-accelerated</td><td>Chrome 113+, Edge 113+</td></tr>
+    </tbody>
+  </table>
+  <p>When <code>target: 'webgpu'</code> is specified but WebGPU is unavailable, the session automatically falls back to the JS engine.</p>
+</div>
+
+<!-- ==================== SECTION 7: Examples ==================== -->
+<div class="section" id="examples">
+  <h2>Examples</h2>
+  <p>nn-deploy ships with 5 pre-built model examples covering different architectures. All are available in the <a href="https://nn-deploy.vercel.app/playground" target="_blank">playground</a>.</p>
+
+  <table>
+    <thead><tr><th>Model</th><th>Category</th><th>Input Shape</th><th>Architecture</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>MNIST MLP</strong></td>
+        <td>Classic</td>
+        <td><code>[1, 784]</code></td>
+        <td>2 hidden layers (MatMul + Add + ReLU) with Softmax output</td>
+      </tr>
+      <tr>
+        <td><strong>Tiny CNN</strong></td>
+        <td>CNN</td>
+        <td><code>[1, 3, 32, 32]</code></td>
+        <td>2 conv blocks (Conv2D + BN + ReLU + Pool) + FC classifier</td>
+      </tr>
+      <tr>
+        <td><strong>ResNet Block</strong></td>
+        <td>CNN</td>
+        <td><code>[1, 64, 16, 16]</code></td>
+        <td>2 conv layers with residual skip connection</td>
+      </tr>
+      <tr>
+        <td><strong>Transformer Block</strong></td>
+        <td>Transformer</td>
+        <td><code>[1, 32, 64]</code></td>
+        <td>Self-attention (Q/K/V) + FFN (GELU) with residual connections</td>
+      </tr>
+      <tr>
+        <td><strong>DepthSep Conv</strong></td>
+        <td>Efficient</td>
+        <td><code>[1, 32, 16, 16]</code></td>
+        <td>MobileNet-style depthwise + pointwise (1x1) conv</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Optimization Effects</h3>
+  <p>Here's what the optimization passes do to each model:</p>
+  <ul>
+    <li><strong>MNIST MLP:</strong> MatMul + Add fuses to <code>FusedMatMulAdd</code>, first chain fuses to <code>FusedLinearReLU</code> (9 nodes &#8594; ~7 nodes)</li>
+    <li><strong>Tiny CNN:</strong> Both Conv2D + BN + ReLU chains fuse to <code>FusedConvBNReLU</code> (16 nodes &#8594; ~12 nodes)</li>
+    <li><strong>ResNet Block:</strong> First conv chain fuses to <code>FusedConvBNReLU</code>, second to <code>FusedConvBN</code></li>
+    <li><strong>Transformer:</strong> MatMul + Add chains fuse in the FFN, attention weights get quantized</li>
+    <li><strong>DepthSep Conv:</strong> Both DW and PW blocks undergo BN fusion and layout optimization to NHWC</li>
+  </ul>
+
+  <div class="callout callout-tip">
+    <p><strong>Try it:</strong> Open the <a href="https://nn-deploy.vercel.app/playground" target="_blank">playground</a>, select any example, and click "Compile &amp; Optimize" to see the full pass-by-pass transformation timeline.</p>
+  </div>
+</div>
+
+<!-- ==================== SECTION 8: Architecture ==================== -->
+<div class="section" id="architecture">
+  <h2>Architecture</h2>
+  <p>nn-deploy follows a classic compiler architecture: frontend (parser) &#8594; IR &#8594; optimization passes &#8594; backend (codegen) &#8594; runtime.</p>
+
+  <div class="diagram-container" id="diagram-arch"></div>
+
+  <h3>Immutable Graph IR</h3>
+  <p>The core data structure is an immutable graph. Every transformation returns a new <code>Graph</code> object, preserving the full history for visualization and debugging:</p>
+  <pre><code class="language-typescript">interface Graph {
+  name: string;
+  nodes: Node[];
+  edges: Edge[];
+  passHistory: PassRecord[];  // full transformation log
+}
+
+interface Node {
+  id: string;
+  op: OpType;           // one of 38 operation types
+  name: string;
+  inputs: Port[];
+  outputs: Port[];
+  attributes: Record&lt;string, any&gt;;
+}
+
+interface Edge {
+  id: string;
+  sourceNodeId: string;
+  sourcePort: number;
+  targetNodeId: string;
+  targetPort: number;
+  tensorType?: TensorType;  // annotated by shape inference
+}</code></pre>
+
+  <h3>Data Flow</h3>
+  <ol>
+    <li><strong>Parse:</strong> <code>parseDSL(source)</code> &#8594; tokenize &#8594; parse &#8594; build <code>Graph</code></li>
+    <li><strong>Optimize:</strong> <code>runPipeline(graph, passes)</code> &#8594; each pass returns a new <code>Graph</code></li>
+    <li><strong>Compile:</strong> <code>compileModel(graph, options)</code> &#8594; runs passes + codegen &#8594; <code>CompiledModel</code></li>
+    <li><strong>Execute:</strong> <code>InferenceSession.create(model)</code> &#8594; select engine &#8594; <code>session.run(inputs)</code></li>
+  </ol>
+
+  <h3>Key Design Decisions</h3>
+  <ul>
+    <li><strong>Immutable transformations:</strong> Each pass returns a new graph. No mutations, no side effects. Enables pass history visualization and easy debugging.</li>
+    <li><strong>Auto-constant creation:</strong> Undefined weight references in DSL are auto-created as Constant nodes, simplifying model definitions.</li>
+    <li><strong>Multi-target codegen:</strong> Same optimized IR compiles to JS, WebGPU, or WASM. Backend choice is deferred to compile time.</li>
+    <li><strong>Sandboxed execution:</strong> JS engine uses <code>new Function()</code> for sandboxed code execution in the browser.</li>
+    <li><strong>Greedy memory planning:</strong> First-fit decreasing algorithm minimizes peak memory without complex ILP solvers.</li>
+  </ul>
+
+  <h3>Tech Stack</h3>
+  <table>
+    <thead><tr><th>Layer</th><th>Technology</th></tr></thead>
+    <tbody>
+      <tr><td>Language</td><td>TypeScript (strict mode)</td></tr>
+      <tr><td>Build</td><td>Turborepo + npm workspaces</td></tr>
+      <tr><td>Frontend</td><td>Next.js 15, React 19</td></tr>
+      <tr><td>State</td><td>Zustand</td></tr>
+      <tr><td>Visualization</td><td>D3.js + ELK.js (graph layout)</td></tr>
+      <tr><td>GPU</td><td>WebGPU (WGSL compute shaders)</td></tr>
+      <tr><td>Styling</td><td>Tailwind CSS v4</td></tr>
+      <tr><td>Deployment</td><td>Vercel</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div><!-- doc-content-inner -->
+</main>
+</div><!-- doc-layout -->
+
+<script src="js/diagrams.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

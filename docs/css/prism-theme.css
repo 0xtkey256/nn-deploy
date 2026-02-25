@@ -1,0 +1,129 @@
+/* nn-deploy Prism Theme - Dark */
+
+code[class*="language-"],
+pre[class*="language-"] {
+  color: #e6edf3;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  tab-size: 2;
+  hyphens: none;
+}
+
+/* Token colors */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #484f58;
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: #8b949e;
+}
+
+.token.namespace {
+  opacity: 0.8;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #f778ba;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #3fb950;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #8b949e;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #58a6ff;
+}
+
+.token.function,
+.token.class-name {
+  color: #f0883e;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #d29922;
+}
+
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+
+.token.italic {
+  font-style: italic;
+}
+
+.token.entity {
+  cursor: help;
+}
+
+/* DSL-specific tokens */
+.token.dsl-keyword {
+  color: #58a6ff;
+  font-weight: 600;
+}
+
+.token.dsl-type {
+  color: #bc8cff;
+}
+
+.token.dsl-op {
+  color: #f0883e;
+  font-weight: 500;
+}
+
+.token.dsl-variable {
+  color: #e6edf3;
+}
+
+.token.dsl-shape {
+  color: #f778ba;
+}
+
+/* Type annotations in TypeScript */
+.token.type {
+  color: #bc8cff;
+}
+
+.token.decorator {
+  color: #f0883e;
+}
+
+/* Line numbers */
+.line-numbers .line-numbers-rows {
+  border-right: 1px solid #30363d;
+}
+
+.line-numbers-rows > span:before {
+  color: #484f58;
+}
